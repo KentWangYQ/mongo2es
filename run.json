@@ -1,0 +1,46 @@
+{
+  "apps": [
+    {
+      "name": "rts",
+      "script": "rts.py",
+      "watch": false,
+      "env": {
+        "FLASK_DEBUG": true,
+        "FLASK_ENV": "development"
+      },
+      "env_wh-test": {
+        "FLASK_ENV": "development_wh"
+      },
+      "env_test": {
+        "FLASK_ENV": "test"
+      },
+      "env_staging": {
+        "FLASK_ENV": "staging"
+      },
+      "env_production": {
+        "FLASK_ENV": "production"
+      }
+    },
+    {
+      "name": "job",
+      "script": "main.py",
+      "watch": false,
+      "env": {
+        "FLASK_DEBUG": true,
+        "FLASK_ENV": "development"
+      },
+      "env_wh-test": {
+        "FLASK_ENV": "development_wh"
+      },
+      "env_test": {
+        "FLASK_ENV": "test"
+      },
+      "env_staging": {
+        "FLASK_ENV": "staging"
+      },
+      "env_production": {
+        "FLASK_ENV": "production"
+      }
+    }
+  ]
+}
