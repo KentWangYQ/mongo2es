@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
 
 
-class ReadOnlyProperty(object):
-    # TODO 自动通过私有属性生成只读属性,防止信息修改
-    pass
+class ErrorStatus(object):
+    __open = 'open'
+    __resolved = 'resolved'
+    __closed = 'closed'
 
+    @property
+    def open(self):
+        return self.__open
 
-class ErrorStatus(ReadOnlyProperty):
-    open = 'open'
-    resolved = 'resolved'
-    closed = 'closed'
+    @property
+    def resolved(self):
+        return self.__resolved
+
+    @property
+    def closed(self):
+        return self.__closed

@@ -2,7 +2,7 @@
 
 import pydash as _
 
-from common import event_emitter
+
 from common.log import logger
 from common.elasticsearch.elasticsearch_client.elasticsearch_client import es_client
 from common.elasticsearch import elasticsearch_util
@@ -59,7 +59,7 @@ def index():
 
 
 def rt_index(mongo_oplog):
-    @event_emitter.on(mongo_oplog.event_emitter, 'actsharedetails_insert')
+    @mongo_oplog.on('actsharedetails_insert')
     def on_insert(data):
         _id, obj = util.obj_from_oplog(data, act_share_detail_cursor.filter)
 

@@ -11,7 +11,7 @@ from common.mongo.bson_c import json_util
 from module.elasticsearch import util
 
 
-def update_by_query(index, doc_type, data, projection, _as=None, _filter={}, pop_fields=None, es_params={}):
+def update_by_query(index, doc_type, data, projection, _filter, es_params, _as=None, pop_fields=None):
     _id, obj = util.obj_from_oplog(data=data, _filter=_filter, projection=projection, pop_fields=pop_fields)
 
     if not obj and not _as:
@@ -47,16 +47,16 @@ def update_by_query(index, doc_type, data, projection, _as=None, _filter={}, pop
                                       params=es_params)
 
 
-def delete(index, doc_type, data, _filter={}, es_params=None):
+def delete(index, doc_type, data, _filter, es_params=None):
     _id = util.obj_from_oplog(data, _filter)[0]
     if _id:
         es_client.delete_by_query(index=index, doc_type=doc_type, body={'query': {'term': {'_id': _id}}},
                                   params=es_params)
 
 
-def index_exists_create(index, mappings=None, settings=None):
+def create(index, mappings=None, settings=None):
     if not es_client.indices.exists(index=index):
-        logger.info('index not exists! create now...\nnew mapping:')
+        logger.info('index "' + index + '": not exists! create now...\nnew mapping:')
         logger.info(json_util.dumps(mappings))
 
         res = es_client.indices.create(index=index,

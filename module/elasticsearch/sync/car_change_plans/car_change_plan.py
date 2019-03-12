@@ -3,7 +3,7 @@
 import pydash as _
 from bson import objectid
 
-from common import event_emitter
+
 from common.log import logger
 
 from model import car_change_plan
@@ -113,14 +113,14 @@ def index_one(_id):
 
 
 def rt_index(mongo_oplog):
-    @event_emitter.on(mongo_oplog.event_emitter, 'carchangeplans_insert')
+    @mongo_oplog.on('carchangeplans_insert')
     def on_insert(data):
         _id, obj = util.obj_from_oplog(data, car_change_plan_cursor.filter)
 
         if _id and obj:
             index_one(_id)
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'carchangeplans_update')
+    @mongo_oplog.on('carchangeplans_update')
     def on_update(data):
         _id, obj = util.obj_from_oplog(data, car_change_plan_cursor.filter)
 
@@ -131,54 +131,54 @@ def rt_index(mongo_oplog):
                                 _filter=car_change_plan_cursor.filter,
                                 es_params=opt['params'])
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'carchangeplans_delete')
+    @mongo_oplog.on('carchangeplans_delete')
     def on_delete(data):
         es_sync_util.delete(index=opt['index'], doc_type=opt['type'], data=data, _filter=car_change_plan_cursor.filter,
                             es_params=opt['params'])
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'carproducts_update')
+    @mongo_oplog.on('carproducts_update')
     def on_carproduct_update(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=car_product_cursor.projection, _filter=car_product_cursor.filter,
                                      _as=car_change_plan_cursor.pop_fields.get('new_car').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'carproducts_delete')
+    @mongo_oplog.on('carproducts_delete')
     def on_carproduct_delete(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=car_product_cursor.projection, _filter=car_product_cursor.filter,
                                      _as=car_change_plan_cursor.pop_fields.get('new_car').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'cities_update')
+    @mongo_oplog.on('cities_update')
     def on_city_update(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=city_cursor.projection, _filter=city_cursor.filter,
                                      _as=car_change_plan_cursor.pop_fields.get('city').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'cities_update')
+    @mongo_oplog.on('cities_update')
     def on_city_delete(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=car_product_cursor.projection, _filter=car_product_cursor.filter,
                                      _as=car_change_plan_cursor.pop_fields.get('city').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_owner_update(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=owner_cursor.projection, _filter=owner_cursor.filter,
                                      _as=car_change_plan_cursor.pop_fields.get('owner').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_owner_delete(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=owner_cursor.projection, _filter=owner_cursor.filter,
                                      _as=car_change_plan_cursor.pop_fields.get('owner').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_car_keeper_update(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=car_keeper_cursor.projection, _filter=car_keeper_cursor.filter,
                                      _as=car_change_plan_cursor.pop_fields.get('car_keeper').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_car_keeper_delete(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=car_keeper_cursor.projection, _filter=car_keeper_cursor.filter,

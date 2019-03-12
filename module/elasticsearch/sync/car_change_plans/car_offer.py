@@ -3,7 +3,7 @@
 import pydash as _
 from bson import objectid
 
-from common import event_emitter
+
 from common.log import logger
 from common.elasticsearch.elasticsearch_client.elasticsearch_client import es_client
 from common.elasticsearch import elasticsearch_util
@@ -103,14 +103,14 @@ def index_one(_id):
 
 
 def rt_index(mongo_oplog):
-    @event_emitter.on(mongo_oplog.event_emitter, 'caroffers_insert')
+    @mongo_oplog.on('caroffers_insert')
     def on_insert(data):
         _id, obj = util.obj_from_oplog(data, car_offer_cursor.filter)
 
         if _id and obj:
             index_one(_id)
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'caroffers_update')
+    @mongo_oplog.on('caroffers_update')
     def on_update(data):
         _id, obj = util.obj_from_oplog(data, car_offer_cursor.filter)
         if _id and obj:
@@ -120,7 +120,7 @@ def rt_index(mongo_oplog):
                                 _filter=car_offer_cursor.filter,
                                 es_params=opt['params'])
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'caroffers_delete')
+    @mongo_oplog.on('caroffers_delete')
     def on_delete(data):
         _id = util.obj_from_oplog(data, car_offer_cursor.filter)[0]
         if _id:
@@ -132,7 +132,7 @@ def rt_index(mongo_oplog):
                                     _filter=car_offer_cursor.filter,
                                     es_params=opt['params'])
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'merchants_update')
+    @mongo_oplog.on('merchants_update')
     def on_merchant_update(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=merchant_cursor.projection,
@@ -141,7 +141,7 @@ def rt_index(mongo_oplog):
                                      _as=_.get(car_offer_cursor.pop_fields, 'merchant.as'))
 
     # populate - support信息更新
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_support_update(data):
         _as = _.get(merchant_cursor.pop_fields, 'support.as') or _.get(merchant_cursor.pop_fields,
                                                                        'support.local_field')
@@ -149,7 +149,7 @@ def rt_index(mongo_oplog):
                                      projection=_.get(merchant_cursor.pop_fields, 'support.projection'), _as=_as)
 
     # populate - support信息删除
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_delete')
+    @mongo_oplog.on('users_delete')
     def on_support_delete(data):
         _as = _.get(merchant_cursor.pop_fields, 'support.as') or _.get(merchant_cursor.pop_fields,
                                                                        'support.local_field')
@@ -157,7 +157,7 @@ def rt_index(mongo_oplog):
                                      projection=_.get(merchant_cursor.pop_fields, 'support.projection'), _as=_as)
 
     # populate - appraiser 信息更新
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_appraiser_update(data):
         _as = _.get(car_offer_cursor.pop_fields, 'appraiser.as') or _.get(car_offer_cursor.pop_fields,
                                                                           'appraiser.local_field')
@@ -165,7 +165,7 @@ def rt_index(mongo_oplog):
                                      projection=_.get(car_offer_cursor.pop_fields, 'appraiser.projection'), _as=_as)
 
     # populate - appraiser 信息删除
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_delete')
+    @mongo_oplog.on('users_delete')
     def on_appraiser_delete(data):
         _as = _.get(car_offer_cursor.pop_fields, 'appraiser.as') or _.get(car_offer_cursor.pop_fields,
                                                                           'appraiser.local_field')

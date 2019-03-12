@@ -7,15 +7,15 @@ from elasticsearch.client.utils import query_params
 
 from config import settings
 
-from common.kafka.producer import Producer
-from common.mongo.bson_c import json_util
+from util.kafka.producer import Producer
+from util.bson_c import json_util
 
 
-class ElasticsearchKafkaClient(Elasticsearch):
+class Op2KafkaClient(Elasticsearch):
     def __init__(self, hosts=None, transport_class=Transport, **kwargs):
         self.producer = Producer()
         self.topic = _.get(settings.SYNC, 'rts.queue.key')
-        ElasticsearchKafkaClient.__init__(self, hosts=hosts, transport_class=transport_class, **kwargs)
+        Elasticsearch.__init__(hosts=hosts, transport_class=transport_class, **kwargs)
 
     @query_params('parent', 'pipeline', 'refresh', 'routing', 'timeout',
                   'timestamp', 'ttl', 'version', 'version_type', 'wait_for_active_shards')

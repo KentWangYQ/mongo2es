@@ -8,7 +8,7 @@ class EventEmitter(object):
         self._events = {}
 
     def on(self, event, listener):
-        if not event in self._events:
+        if event not in self._events:
             self._events[event] = []
         self._events[event].append(listener)
 
@@ -49,18 +49,16 @@ class EventEmitter(object):
     def count(self, event):
         return len(self._events[event]) if event in self._events else 0
 
+    def on_(self, event):
+        def decorator(func):
+            self.on(event, func)
+            return func
 
-def on(emitter, event):
-    def decorator(func):
-        emitter.on(event, func)
-        return func
+        return decorator
 
-    return decorator
+    def once_(self, event):
+        def decorator(func):
+            self.once(event, func)
+            return func
 
-
-def once(emitter, event):
-    def decorator(func):
-        emitter.once(event, func)
-        return func
-
-    return decorator
+        return decorator

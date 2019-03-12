@@ -5,14 +5,10 @@ import time
 import pymongo
 
 from . import filter
-from common import event_emitter
+from common.event_emitter import EventEmitter
 
 
-class MongoOplog(event_emitter.EventEmitter):
-    @property
-    def event_emitter(self):
-        return self.__event_emitter
-
+class MongoOplog(EventEmitter):
     _uri = 'mongodb://127.0.0.1:27017/'
 
     __close = False
@@ -34,9 +30,8 @@ class MongoOplog(event_emitter.EventEmitter):
                 o2: 在执行更新操作时的where条件，仅限于update时才有该属性
 
         """
+        EventEmitter.__init__(self)
         self.__close = False
-
-        self.__event_emitter = event_emitter.EventEmitter()
 
         self._client = pymongo.MongoClient((uri or self._uri))
         self._oplog = self._client.local.oplog.rs
@@ -53,7 +48,7 @@ class MongoOplog(event_emitter.EventEmitter):
                 for doc in cursor:
                     try:
                         # 触发data事件
-                        self.__event_emitter.emit('data', doc)
+                        self.emit('data', doc)
 
                         # 触发相应option事件
                         method_name = '_MongoOplog__option_' + str(doc.get('op'))
@@ -67,7 +62,7 @@ class MongoOplog(event_emitter.EventEmitter):
 
                         self._query['ts'] = doc['ts']
                     except Exception as e:
-                        self.__event_emitter.emit('error', e, doc)
+                        self.emit('error', e, doc)
 
                 time.sleep(1)
 
@@ -77,30 +72,31 @@ class MongoOplog(event_emitter.EventEmitter):
         self.__close = True
 
     def __option_i(self, data):
-        self.__event_emitter.emit('insert', data)
+        self.emit('insert', data)
 
     def __option_u(self, data):
-        self.__event_emitter.emit('update', data)
+        self.emit('update', data)
 
     def __option_d(self, data):
-        self.__event_emitter.emit('delete', data)
+        self.emit('delete', data)
 
     def __option_c(self, data):
-        self.__event_emitter.emit('cmd', data)
+        self.emit('cmd', data)
 
     def __option_n(self, data):
-        self.__event_emitter.emit('noop', data)
+        self.emit('noop', data)
 
     def __option_c_i(self, data):
-        self.__event_emitter.emit(self.__get_ns_collection(data['ns']) + '_insert', data)
+        self.emit(self.__get_ns_collection(data['ns']) + '_insert', data)
 
     def __option_c_u(self, data):
-        self.__event_emitter.emit(self.__get_ns_collection(data['ns']) + '_update', data)
+        self.emit(self.__get_ns_collection(data['ns']) + '_update', data)
 
     def __option_c_d(self, data):
-        self.__event_emitter.emit(self.__get_ns_collection(data['ns']) + '_delete', data)
+        self.emit(self.__get_ns_collection(data['ns']) + '_delete', data)
 
-    def __get_ns_collection(self, ns):
+    @staticmethod
+    def __get_ns_collection(ns):
         ns_l = ns.split('.')
         ns_l.pop(0)
         if len(ns_l) == 1:

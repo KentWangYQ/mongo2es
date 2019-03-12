@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import itertools
 
 from common.log import logger
 from common.elasticsearch.elasticsearch_client.elasticsearch_client import es_client
@@ -26,35 +27,27 @@ opt = {
 
 
 def index():
-    body = []
-    index = 0
-
     course = order.find(filter=order_cursor.filter, projection=order_cursor.projection,
                         batch_size=order_cursor.limit)
 
-    order_cursor.total = course.count()
+    def gen_body(_course):
+        result = None
+        while result is None or len(result) == order_cursor.limit:
+            result = [
+                [{'index': {'_id': str(v.pop('_id'))}}, v]
+                for v in itertools.islice(_course, order_cursor.limit)
+            ]
+            if len(result) > 0:
+                yield _.flatten(result)
 
-    for item in course:
-        body.append({
-            'index': {
-                '_id': str(item.pop('_id')),
-                '_parent': str(item.get('car_change_plan_id'))
-            }
-        })
-        body.append(item)
+    for body in gen_body(course):
+        res = es_client.bulk(index=opt['index'], doc_type=opt['type'], params=opt['params'], body=body)
 
-        index += 1
-
-        if (index % order_cursor.limit) == 0 or index >= order_cursor.total:
-            res = es_client.bulk(index=opt['index'], doc_type=opt['type'], params=opt['params'], body=body)
-
-            if res['errors']:
-                raise elasticsearch_util.bulk_error_2_elasticsearch_exception(res['items'])
-            else:
-                order_cursor.count += len(res['items'])
-                logger.info('carChangePlan order indexed:{0}'.format(order_cursor.count))
-
-            body = []
+        if res['errors']:
+            raise elasticsearch_util.bulk_error_2_elasticsearch_exception(res['items'])
+        else:
+            order_cursor.count += len(res['items'])
+            logger.info('activity order indexed:{0}'.format(order_cursor.count))
 
 
 def rt_index(mongo_oplog):

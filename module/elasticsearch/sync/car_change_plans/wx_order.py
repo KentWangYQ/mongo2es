@@ -2,7 +2,7 @@
 
 import pydash as _
 
-from common import event_emitter
+
 from common.log import logger
 from common.elasticsearch.elasticsearch_client.elasticsearch_client import es_client
 from common.elasticsearch import elasticsearch_util
@@ -75,7 +75,7 @@ def index():
             body = []
 
 def rt_index(mongo_oplog):
-    @event_emitter.on(mongo_oplog.event_emitter, 'wxorders_insert')
+    @mongo_oplog.on('wxorders_insert')
     def on_insert(data):
         _id, obj = util.obj_from_oplog(data,wx_order_cursor.filter, pop_fields=wx_order_cursor.pop_fields)
         if _id and obj:
@@ -88,12 +88,12 @@ def rt_index(mongo_oplog):
                 es_client.index(index=opt['index'], doc_type=opt['type'], id=_id, params=opt['params'],
                             body=obj)
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'wxorders_update')
+    @mongo_oplog.on('wxorders_update')
     def on_update(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=wx_order_cursor.projection, _filter=wx_order_cursor.filter)
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'wxorders_delete')
+    @mongo_oplog.on('wxorders_delete')
     def on_delete(data):
         es_sync_util.delete(index=opt['index'], doc_type=opt['type'], data=data, _filter=wx_order_cursor.filter,
                             es_params=opt['params'])

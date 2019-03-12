@@ -17,7 +17,7 @@ def get(key):
         return None
 
 
-class ETCD_Client():
+class ETCD_Client(object):
     def __init__(self, key):
         self.key = key if key[-1:] == '/' else key + '/'
 
@@ -29,15 +29,16 @@ class ETCD_Client():
 
     def delete(self, key, recursive, dir, **kwargs):
         key = self.key + key
-        return client.delete(key=key, recursive=recursive, dir=dir, *kwargs)
+        return client.delete(key=key, recursive=recursive, dir=dir, **kwargs)
 
-    def __mapping(self, key):
-        result = {}
+    @staticmethod
+    def __mapping(key):
         obj = get(key)
         if obj is not None:
-            for item in obj._children:
-                result[item['key'].split('/')[-1]] = item['value']
-        return result
+            return {k.split('/')[-1]: v for k, v in (obj._children or {}).items()}
+            # for item in obj._children:
+            #     result[item['key'].split('/')[-1]] = item['value']
+        return {}
 
 
 mongo2es = ETCD_Client(settings.ETCD.get('keys').get('MONGO2ES'))

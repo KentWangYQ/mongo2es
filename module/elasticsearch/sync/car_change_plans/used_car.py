@@ -2,7 +2,7 @@
 
 from bson import objectid
 
-from common import event_emitter
+
 
 from common.log import logger
 
@@ -81,14 +81,14 @@ def index_one(_id):
 
 
 def rt_index(mongo_oplog):
-    @event_emitter.on(mongo_oplog.event_emitter, 'usedcars_insert')
+    @mongo_oplog.on('usedcars_insert')
     def on_insert(data):
         _id, obj = util.obj_from_oplog(data, used_car_cursor.filter)
 
         if _id and obj:
             index_one(_id)
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'usedcars_update')
+    @mongo_oplog.on('usedcars_update')
     def on_update(data):
         _id, obj = util.obj_from_oplog(data, used_car_cursor.filter)
 
@@ -98,18 +98,18 @@ def rt_index(mongo_oplog):
             es_sync_util.delete(index=opt['index'], doc_type=opt['type'], data=data, _filter=used_car_cursor.filter,
                                 es_params=opt['params'])
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'usedcars_delete')
+    @mongo_oplog.on('usedcars_delete')
     def on_delete(data):
         es_sync_util.delete(index=opt['index'], doc_type=opt['type'], data=data, _filter=used_car_cursor.filter,
                             es_params=opt['params'])
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_owner_update(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=owner_cursor.projection, _filter=owner_cursor.filter,
                                      _as=used_car_cursor.pop_fields.get('owner').get('as'))
 
-    @event_emitter.on(mongo_oplog.event_emitter, 'users_update')
+    @mongo_oplog.on('users_update')
     def on_owner_delete(data):
         es_sync_util.update_by_query(index=opt['index'], doc_type=opt['type'], data=data,
                                      projection=owner_cursor.projection, _filter=owner_cursor.filter,
